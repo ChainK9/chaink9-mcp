@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.chaink9/chaink9",
+  "description": "Token risk checks on BSC, Ethereum and Base: trades the token on a fork. Paid in USDC via x402.",
+  "repository": { "url": "https://github.com/ChainK9/chaink9-mcp", "source": "github" },
+  "websiteUrl": "https://chaink9.com",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "chaink9-mcp",
+      "version": "0.1.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        { "name": "CHAINK9_PRIVATE_KEY", "description": "Dedicated Base wallet key that pays in USDC (0x + 64 hex)", "isRequired": true, "isSecret": true, "format": "string" },
+        { "name": "CHAINK9_MAX_USD_PER_CALL", "description": "Maximum USD per single payment (default 0.05)", "isRequired": false, "format": "string" },
+        { "name": "CHAINK9_MAX_USD_PER_DAY", "description": "Maximum USD spent per day (default 1)", "isRequired": false, "format": "string" }
+      ]
+    }
+  ]
+}
