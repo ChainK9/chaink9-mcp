@@ -22,6 +22,7 @@ appear without updating this package.
 |---|---|---|
 | `scan` | $0.02 | Full check of a token: honeypot, buy/sell taxes and how they change, owner pause, blacklist, mint and confiscation powers, limits, liquidity, upgrade authority. Verdict: danger, caution or ok. |
 | `scan-lite` | $0.005 | Faster check for bots (2–5 s): one real buy and sell plus the contract reads. Skips the extra trade and time-travel probes. |
+| `scan-ultra` | $0.05 | Everything in `scan`, plus who holds the token: top holder and top-10 share, and whether one wallet can pull the liquidity. |
 | `report` | $0.002 | The latest stored scan of a token, without a new one. |
 | `feed` | $0.002 | Tokens that just got a market, with a verdict where scanned. |
 | `simulate-trade` | $0.02 | Buy or sell for a given wallet on a fork, with its real balances. |
