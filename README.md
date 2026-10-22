@@ -65,6 +65,14 @@ Cursor, Claude Desktop or any client with a JSON config:
 Claude Desktop can also install the `.mcpb` bundle from the
 [releases](https://github.com/ChainK9/chaink9-mcp/releases) with a click.
 
+### Hosted server, no install
+
+`https://api.chaink9.com/mcp` serves the same tools over streamable HTTP, plus a free
+`verdict` tool (the stored verdict and which checks flagged it). Paid tools there take the
+payment inside the MCP call, x402-style, so they need an x402-aware client such as
+[`@x402/mcp`](https://www.npmjs.com/package/@x402/mcp)'s `createx402MCPClient`. Ordinary MCP
+clients can connect and use `verdict`; to pay from those, use the package above.
+
 ## Limits
 
 | Variable | Default | Meaning |
