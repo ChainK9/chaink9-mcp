@@ -4,12 +4,12 @@
   "description": "Token risk checks on BSC, Ethereum and Base: trades the token on a fork. Paid in USDC via x402.",
   "repository": { "url": "https://github.com/ChainK9/chaink9-mcp", "source": "github" },
   "websiteUrl": "https://chaink9.com",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "chaink9-mcp",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "transport": { "type": "stdio" },
       "environmentVariables": [
         { "name": "CHAINK9_PRIVATE_KEY", "description": "Dedicated Base wallet key that pays in USDC (0x + 64 hex)", "isRequired": true, "isSecret": true, "format": "string" },

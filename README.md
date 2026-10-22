@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/ChainK9/chaink9-mcp/main/icon.png" width="120" alt="ChainK9 logo"></p>
+
 # ChainK9 MCP server
 
 Token risk checks for AI agents on **BNB Smart Chain, Ethereum and Base**.
