@@ -2,7 +2,7 @@
 
 # ChainK9 MCP server
 
-Token risk checks for AI agents on **BNB Smart Chain, Ethereum and Base**.
+Token risk checks for AI agents on **BNB Smart Chain, Ethereum, Base and Arc**.
 
 Most token scanners read flags from someone else's API. ChainK9 does what a buyer would: it
 forks the chain and really buys and sells the token through its market (PancakeSwap or
@@ -33,8 +33,10 @@ appear without updating this package.
 | `risk-changes` | $0.002 | What changed between a token's last two scans. |
 | `deployer-report` | $0.005 | A token's verified creator and their other known tokens. |
 | `portfolio-screen` | $0.005 | A wallet's balances of given tokens, riskiest first. |
+| `trace` | $0.01 | Follow the money out of one transaction, wallet to wallet and through swaps, up to five hops, until it rests, reaches a busy wallet such as an exchange, a mixer, or is burned. |
 
-Every tool takes `chain`: `bsc` (default), `eth` or `base`.
+Every tool takes `chain`: `bsc` (default), `eth`, `base` or `arc`. `trace` takes a transaction
+`hash`; the others a token or wallet address.
 
 ## Setup
 
@@ -67,7 +69,8 @@ Claude Desktop can also install the `.mcpb` bundle from the
 
 ### Hosted server, no install
 
-`https://api.chaink9.com/mcp` serves the same tools over streamable HTTP, plus a free
+`https://api.chaink9.com/mcp` serves the same tools over streamable HTTP (MCP 2025 and
+2026-07-28 clients alike), plus a free
 `verdict` tool (the stored verdict and which checks flagged it). Paid tools there take the
 payment inside the MCP call, x402-style, so they need an x402-aware client such as
 [`@x402/mcp`](https://www.npmjs.com/package/@x402/mcp)'s `createx402MCPClient`. Ordinary MCP
