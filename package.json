@@ -1,6 +1,6 @@
 {
   "name": "chaink9-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server for ChainK9: token risk checks on BNB Smart Chain, Ethereum, Base and Arc. It buys and sells the token on a private fork of the chain to catch honeypots, hidden taxes and owner traps. Paid per call in USDC on Base with x402.",
   "mcpName": "com.chaink9/chaink9",
   "type": "module",
