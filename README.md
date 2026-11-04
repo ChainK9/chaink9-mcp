@@ -6,7 +6,7 @@ Token risk checks for AI agents on **BNB Smart Chain, Ethereum, Base and Arc**.
 
 Most token scanners read flags from someone else's API. ChainK9 does what a buyer would: it
 forks the chain and really buys and sells the token through its market (PancakeSwap or
-Uniswap V2, V3 or V4, hooks included), then runs 60+ checks. A honeypot is caught by what it
+Uniswap V2, V3 or V4, hooks included), then runs 70+ checks. A honeypot is caught by what it
 does, not by what its code looks like.
 
 Each successful call is paid automatically in **USDC on Base** with the
