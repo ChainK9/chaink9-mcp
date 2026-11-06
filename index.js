@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// chaink9-mcp: ChainK9's token risk checks as MCP tools, paid per call with x402 (USDC on Base).
+// chaink9-mcp: ChainK9's token risk checks as MCP tools, paid per call with x402 (USDC on Base,
+// or USDT on BNB Smart Chain).
 // Tools come from the live catalog (https://api.chaink9.com/openapi.json), so new products
 // appear without updating this package.
 
@@ -12,10 +13,27 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import { decodePaymentResponseHeader, wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
+import { parseUnits } from "viem";
 
 const VERSION = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;
 const API = "https://api.chaink9.com";
-const BASE_MAINNET = "eip155:8453"; // ChainK9 is paid in USDC on Base only
+// Where the wallet pays. BSC's USDT has no EIP-3009, so it goes through Permit2: the first payment
+// also signs a one-time approval, which needs a little BNB for gas.
+const NETWORKS = {
+  base: { id: "eip155:8453", label: "USDC on Base", wallet: "a little USDC on Base (no ETH needed)" },
+  bsc: {
+    id: "eip155:56",
+    label: "USDT on BNB Smart Chain",
+    wallet: "a little USDT on BNB Smart Chain, plus about $0.01 of BNB for the one-time Permit2 approval",
+    usdt: "0x55d398326f99059fF775485246999027B3197955",
+    rpcUrl: "https://bsc-dataseed.bnbchain.org", // reads the Permit2 allowance, prices the approval
+  },
+};
+const PAY = NETWORKS[(process.env.CHAINK9_PAY_NETWORK || "base").trim().toLowerCase()];
+if (!PAY) {
+  console.error(`[chaink9] CHAINK9_PAY_NETWORK must be one of: ${Object.keys(NETWORKS).join(", ")}`);
+  process.exit(1);
+}
 const MAX_PER_CALL = Number(process.env.CHAINK9_MAX_USD_PER_CALL || 0.05);
 const MAX_PER_DAY = Number(process.env.CHAINK9_MAX_USD_PER_DAY || 1);
 const DIR = join(homedir(), ".chaink9-mcp");
@@ -40,7 +58,7 @@ async function loadCatalog() {
       price,
       tool: {
         name,
-        description: `${op.description || op.summary || name} Costs $${price} per successful call, paid automatically in USDC on Base; failed calls are free.`,
+        description: `${op.description || op.summary || name} Costs $${price} per successful call, paid automatically in ${PAY.label}; failed calls are free.`,
         inputSchema: op.requestBody?.content?.["application/json"]?.schema ?? { type: "object", properties: {} },
       },
     });
@@ -55,11 +73,16 @@ function payer() {
   if (payFetch) return payFetch;
   const key = process.env.CHAINK9_PRIVATE_KEY;
   if (!key) return null;
-  // The x402 client signs only Base payments and refuses any single one above the cap,
-  // whatever a server asks for.
+  // The x402 client signs payments on PAY's network only and refuses any single one above the cap,
+  // whatever a server asks for. x402 clients pay only in tokens they know by default; BSC's USDT
+  // isn't one, so it's opted in with the same cap in its 18 decimals.
+  const account = privateKeyToAccount(key);
   payFetch = wrapFetchWithPaymentFromConfig(fetch, {
-    schemes: [{ network: BASE_MAINNET, client: new ExactEvmScheme(privateKeyToAccount(key)) }],
-    spendControls: { maxAmountPerPayment: `$${MAX_PER_CALL}` },
+    schemes: [{ network: PAY.id, client: PAY.rpcUrl ? new ExactEvmScheme(account, { 56: { rpcUrl: PAY.rpcUrl } }) : new ExactEvmScheme(account) }],
+    spendControls: {
+      maxAmountPerPayment: `$${MAX_PER_CALL}`,
+      ...(PAY.usdt && { allowedAssets: [{ network: PAY.id, asset: PAY.usdt, maxAmountPerPayment: parseUnits(String(MAX_PER_CALL), 18).toString() }] }),
+    },
   });
   return payFetch;
 }
@@ -88,7 +111,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
   const entry = (await loadCatalog()).get(req.params.name);
   if (!entry) return fail(`Unknown tool ${req.params.name}.`);
   const pay = payer();
-  if (!pay) return fail("No wallet configured. Set CHAINK9_PRIVATE_KEY to the private key of a dedicated Base wallet holding a little USDC (no ETH needed); see https://api.chaink9.com.");
+  if (!pay) return fail(`No wallet configured. Set CHAINK9_PRIVATE_KEY to the private key of a dedicated wallet holding ${PAY.wallet}; see https://api.chaink9.com.`);
   if (!(entry.price <= MAX_PER_CALL)) return fail(`${req.params.name} costs $${entry.price}, above CHAINK9_MAX_USD_PER_CALL ($${MAX_PER_CALL}).`);
   if (spentToday() + entry.price > MAX_PER_DAY) return fail(`Daily limit reached: $${spentToday()} of CHAINK9_MAX_USD_PER_DAY ($${MAX_PER_DAY}) spent today.`);
 
@@ -116,4 +139,4 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
 });
 
 await server.connect(new StdioServerTransport());
-log(`chaink9-mcp ${VERSION} ready (limits: $${MAX_PER_CALL}/call, $${MAX_PER_DAY}/day)`);
+log(`chaink9-mcp ${VERSION} ready (pays in ${PAY.label}; limits: $${MAX_PER_CALL}/call, $${MAX_PER_DAY}/day)`);

@@ -1,27 +1,33 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.chaink9/chaink9",
-  "description": "Token risk checks on BSC, ETH, Base and Arc: trades the token on a fork. Paid in USDC via x402.",
+  "description": "Token risk checks on BSC, ETH, Base and Arc: trades the token on a fork. Paid in USDC/USDT via x402.",
   "repository": {
     "url": "https://github.com/ChainK9/chaink9-mcp",
     "source": "github"
   },
   "websiteUrl": "https://chaink9.com",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "chaink9-mcp",
-      "version": "0.1.3",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
           "name": "CHAINK9_PRIVATE_KEY",
-          "description": "Dedicated Base wallet key that pays in USDC (0x + 64 hex)",
+          "description": "Dedicated wallet key that pays: USDC on Base, or USDT on BSC (0x + 64 hex)",
           "isRequired": true,
           "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "CHAINK9_PAY_NETWORK",
+          "description": "base (USDC on Base, default) or bsc (USDT on BNB Smart Chain)",
+          "isRequired": false,
           "format": "string"
         },
         {

@@ -26,4 +26,13 @@ const overCap = await capped.callTool({ name: "scan", arguments: { token: "0x0E0
 assert.ok(overCap.isError && overCap.content[0].text.includes("above CHAINK9_MAX_USD_PER_CALL"), overCap.content[0].text);
 await capped.close();
 
-console.log(`ok: ${tools.length} tools (${names.join(", ")}); no-wallet and per-call cap refuse before paying`);
+// BSC: tools say they're paid in USDT there. A throwaway key with no funds builds a real Permit2
+// payment against the live API, which refuses it before anything is charged.
+const bsc = await connect({ CHAINK9_PRIVATE_KEY: "0x" + "22".repeat(32), CHAINK9_PAY_NETWORK: "bsc" });
+const bscTools = (await bsc.listTools()).tools;
+assert.ok(bscTools.find((t) => t.name === "report").description.includes("USDT on BNB Smart Chain"));
+const unfunded = await bsc.callTool({ name: "report", arguments: { token: "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82" } });
+assert.ok(unfunded.isError && /402|not charged|insufficient|balance/i.test(unfunded.content[0].text), unfunded.content[0].text);
+await bsc.close();
+
+console.log(`ok: ${tools.length} tools (${names.join(", ")}); no-wallet and per-call cap refuse before paying; an unfunded BSC wallet is refused, not charged`);

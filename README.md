@@ -9,8 +9,8 @@ forks the chain and really buys and sells the token through its market (PancakeS
 Uniswap V2, V3 or V4, hooks included), then runs 70+ checks. A honeypot is caught by what it
 does, not by what its code looks like.
 
-Each successful call is paid automatically in **USDC on Base** with the
-[x402](https://x402.org) protocol, from a wallet you choose. There is no account and no API
+Each successful call is paid automatically in **USDC on Base** or **USDT on BNB Smart Chain**
+with the [x402](https://x402.org) protocol, from a wallet you choose. There is no account and no API
 key, and failed calls (bad input, not a token, no liquidity, engine busy) are free.
 
 ## Tools
@@ -42,6 +42,9 @@ Every tool takes `chain`: `bsc` (default), `eth`, `base` or `arc`. `trace` takes
 
 1. Make a **new wallet just for this** and put a few dollars of **USDC on Base** in it. It
    needs no ETH: x402 payments are signatures, and the payment service pays the gas.
+   To pay on BNB Smart Chain instead, put **USDT on BSC** in it plus about $0.01 of **BNB**, and
+   set `CHAINK9_PAY_NETWORK=bsc`. BSC's USDT is paid through Permit2: the first payment also
+   signs a one-time approval, which is the only thing that uses the BNB.
 2. Add the server to your MCP client with that wallet's private key.
 
 Claude Code:
@@ -80,12 +83,13 @@ clients can connect and use `verdict`; to pay from those, use the package above.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `CHAINK9_PRIVATE_KEY` | (required) | Private key of the dedicated Base wallet that pays. |
+| `CHAINK9_PRIVATE_KEY` | (required) | Private key of the dedicated wallet that pays. |
+| `CHAINK9_PAY_NETWORK` | `base` | `base` pays in USDC on Base, `bsc` in USDT on BNB Smart Chain. |
 | `CHAINK9_MAX_USD_PER_CALL` | `0.05` | Any single payment above this is refused. |
 | `CHAINK9_MAX_USD_PER_DAY` | `1` | Stops paying once this much was spent today (UTC). |
 
 The daily total is kept in `~/.chaink9-mcp/spend.json`. The wallet only ever signs payments
-on Base, and the key never leaves your machine.
+on the network you chose, and the key never leaves your machine.
 
 ## Disclaimer
 
