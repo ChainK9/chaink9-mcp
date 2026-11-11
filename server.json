@@ -7,12 +7,12 @@
     "source": "github"
   },
   "websiteUrl": "https://chaink9.com",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "chaink9-mcp",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "transport": {
         "type": "stdio"
       },
