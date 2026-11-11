@@ -9,6 +9,10 @@ forks the chain and really buys and sells the token through its market (PancakeS
 Uniswap V2, V3 or V4, hooks included), then runs 70+ checks. A honeypot is caught by what it
 does, not by what its code looks like.
 
+How often it is right is measured in public: every pre-scanned launch is judged again a day
+later on the real chain, and the catch rate, false alarms and precision, next to honeypot.is
+and GoPlus, are on [chaink9.com/accuracy](https://chaink9.com/accuracy).
+
 Each successful call is paid automatically in **USDC on Base** or **USDT on BNB Smart Chain**
 with the [x402](https://x402.org) protocol, from a wallet you choose. There is no account and no API
 key, and failed calls (bad input, not a token, no liquidity, engine busy) are free.
