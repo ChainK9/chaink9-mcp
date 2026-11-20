@@ -211,13 +211,15 @@ Ordinary MCP clients can connect and use `verdict`. To pay from those, use the p
 The scan engine is closed source. This repository is open so you can read what runs on your
 machine and signs with your wallet: [`index.js`](index.js), about 140 lines.
 
-Two more ChainK9 tools are open source:
+Three more ChainK9 tools are open source:
 
 - [bsc-honeypot-benchmark](https://github.com/ChainK9/bsc-honeypot-benchmark): 47 test tokens for
   BNB Smart Chain, 37 of them with a hidden trick, for testing any token scanner. They are the
   set ChainK9's own checks are tested against.
 - [bsc-block-time](https://github.com/ChainK9/bsc-block-time): turns BNB Smart Chain block numbers
   into dates across every block-speed change, and finds contracts that still count time in blocks.
+- [bsc-lp-lock-checker](https://github.com/ChainK9/bsc-lp-lock-checker): checks whether a BNB
+  Smart Chain token's liquidity is really locked, until when, and who controls the lock.
 
 Danger catches are posted to the Telegram channel [t.me/chaink9](https://t.me/chaink9). For
 questions and bug reports, [open an issue](https://github.com/ChainK9/chaink9-mcp/issues) or write
