@@ -74,7 +74,7 @@
     "max_usd_per_call": {
       "type": "number",
       "title": "Max USD per call",
-      "description": "Any single payment above this is refused. The most expensive tool costs $0.04.",
+      "description": "Any single payment above this is refused. The most expensive tool costs $0.05.",
       "default": 0.05,
       "min": 0.001,
       "max": 1,

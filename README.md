@@ -1,55 +1,100 @@
-<p align="center"><img src="https://raw.githubusercontent.com/ChainK9/chaink9-mcp/main/icon.png" width="120" alt="ChainK9 logo"></p>
+<p align="center">
+  <a href="https://chaink9.com"><img src="https://raw.githubusercontent.com/ChainK9/chaink9-mcp/main/assets/banner.png" width="100%" alt="ChainK9: token risk checks that really trade the token, on BNB Chain, Ethereum, Base and Arc"></a>
+</p>
 
-# ChainK9 MCP server
+<p align="center">
+  <a href="https://www.npmjs.com/package/chaink9-mcp"><img src="https://img.shields.io/npm/v/chaink9-mcp?label=npm&color=2f8f5b" alt="npm version"></a>
+  <a href="https://chaink9.com/accuracy"><img src="https://img.shields.io/badge/accuracy-measured%20in%20public-2f8f5b" alt="Accuracy measured in public"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2f8f5b" alt="MIT license"></a>
+</p>
 
-Token risk checks for AI agents on **BNB Smart Chain, Ethereum, Base and Arc**.
+# ChainK9
 
-Most token scanners read flags from someone else's API. ChainK9 does what a buyer would: it
-forks the chain and really buys and sells the token through its market (PancakeSwap or
-Uniswap V2, V3 or V4, hooks included), then runs 70+ checks. A honeypot is caught by what it
-does, not by what its code looks like.
+ChainK9 checks whether a token is a trap before you buy it. It looks for honeypots that can be
+bought but not sold, hidden or changing taxes, owners who can pause, blacklist, mint or take
+tokens, and liquidity that one wallet can pull. It covers BNB Smart Chain, Ethereum, Base and Arc.
 
-How often it is right is measured in public: every pre-scanned launch is judged again a day
-later on the real chain, and the catch rate, false alarms and precision, next to honeypot.is
-and GoPlus, are on [chaink9.com/accuracy](https://chaink9.com/accuracy).
+Most token scanners read flags from someone else's API. ChainK9 does what a buyer would: it forks
+the chain, buys the token through its real market (PancakeSwap or Uniswap V2, V3 or V4, hooks
+included), sells it again, and runs 70+ checks on what happened. A honeypot gets caught when its
+sell fails on the fork, however clean its code looks.
 
-Each successful call is paid automatically in **USDC on Base** or **USDT on BNB Smart Chain**
-with the [x402](https://x402.org) protocol, from a wallet you choose. There is no account and no API
-key, and failed calls (bad input, not a token, no liquidity, engine busy) are free.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ChainK9/chaink9-mcp/main/assets/demo.gif" width="100%" alt="Someone asks whether a token is safe to buy. ChainK9 forks BNB Chain, buys the token, sells part of it, moves the clock forward 7 days and sells again. The second sell reverts and the verdict is danger.">
+</p>
 
-## Tools
+<p align="center"><sub>An example token, sped up. A real scan takes 10 to 40 seconds.</sub></p>
 
-The tool list is read live from [api.chaink9.com](https://api.chaink9.com), so new products
-appear without updating this package.
+There are three ways to use it:
 
-| Tool | Price | What it does |
-|---|---|---|
-| `scan` | $0.02 | Full check of a token: honeypot, buy/sell taxes and how they change, owner pause, blacklist, mint and confiscation powers, limits, liquidity, upgrade authority. Verdict: danger, caution or ok. |
-| `scan-lite` | $0.005 | Faster check for bots (2–5 s): one real buy and sell plus the contract reads. Skips the extra trade and time-travel probes. |
-| `scan-ultra` | $0.05 | Everything in `scan`, plus who holds the token: top holder and top-10 share, and whether one wallet can pull the liquidity. |
-| `report` | $0.002 | The latest stored scan of a token, without a new one. |
-| `feed` | $0.002 | Tokens that just got a market, with a verdict where scanned. |
-| `simulate-trade` | $0.02 | Buy or sell for a given wallet on a fork, with its real balances. |
-| `exit-check` | $0.04 | Test up to four sell sizes from a wallet's real balance. |
-| `transaction-preview` | $0.02 | Run any transaction on a fork and see balance changes. |
-| `liquidity-report` | $0.003 | The token's pool: reserves and LP tokens (V2), or liquidity and price (V3/V4). |
-| `launch-feed` | $0.003 | New markets that are actually funded, optionally by verdict. |
-| `risk-changes` | $0.002 | What changed between a token's last two scans. |
-| `deployer-report` | $0.005 | A token's verified creator and their other known tokens. |
-| `portfolio-screen` | $0.005 | A wallet's balances of given tokens, riskiest first. |
-| `trace` | $0.01 | Follow the money out of one transaction, wallet to wallet and through swaps, up to five hops, until it rests, reaches a busy wallet such as an exchange, a mixer, or is burned. |
+- [chaink9.com](https://chaink9.com): paste a token address in the browser.
+- The [HTTP API](https://chaink9.com/developers), for trading bots and your own tools.
+- This repository, an MCP server that gives the same checks to Claude, Cursor and other AI
+  assistants. [Install it](#install) in one line.
 
-Every tool takes `chain`: `bsc` (default), `eth`, `base` or `arc`. `trace` takes a transaction
-`hash`; the others a token or wallet address.
+## How a scan works
 
-## Setup
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ChainK9/chaink9-mcp/main/assets/how-a-scan-works.png" width="100%" alt="A token address goes in from chaink9.com, the HTTP API or this MCP server. ChainK9 forks the chain, buys the token, probes it, sells it and returns a verdict: danger, caution or ok.">
+</p>
 
-1. Make a **new wallet just for this** and put a few dollars of **USDC on Base** in it. It
-   needs no ETH: x402 payments are signatures, and the payment service pays the gas.
-   To pay on BNB Smart Chain instead, put **USDT on BSC** in it plus about $0.01 of **BNB**, and
-   set `CHAINK9_PAY_NETWORK=bsc`. BSC's USDT is paid through Permit2: the first payment also
-   signs a one-time approval, which is the only thing that uses the BNB.
-2. Add the server to your MCP client with that wallet's private key.
+1. Fork. ChainK9 copies the chain at its latest block into a private fork.
+2. Buy. It buys the token through its real pool, as a buyer would.
+3. Probe. It moves the clock forward and sells again, tries the owner's powers as the owner, and
+   rewinds each probe so the position is still there for the next one.
+4. Sell. It sells the position and compares what came back with the pool's quote.
+5. Verdict. It answers danger, caution or ok, with what every check saw.
+
+A check fails only on something that happened on the fork or on state that was read. A function
+that merely exists in the bytecode is a warning at most, and a check that could not run is
+reported as skipped.
+
+## What it checks
+
+| Question | What ChainK9 does on the fork |
+|---|---|
+| Can you sell? | Buys, sells right away, then moves the clock forward and sells again. |
+| What does a trade cost? | Compares what a buy and a sell return with the pool's quote, and looks for taxes that change over time or after several sells. |
+| What can the owner do? | Tries pause, blacklist, mint and confiscation as the owner. |
+| Are there limits? | Tests transfer limits, sell limits and cooldowns. |
+| Can the liquidity leave? | Reads the pool and, in the deepest scan, whether one wallet holds its liquidity tokens. |
+| Can the code change? | Checks for a proxy and who holds the upgrade authority. |
+
+A trimmed real report, for CAKE on BNB Smart Chain in October 2026:
+
+```json
+{
+  "token": "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82",
+  "chain": "bsc",
+  "verdict": "caution",
+  "block": 128151663,
+  "elapsed_ms": 22555,
+  "pool_version": "v2",
+  "tier": "full",
+  "results": [
+    { "module": "sellability", "severity": "critical", "status": "pass",
+      "detail": "sell succeeded — the position is exitable" },
+    { "module": "sell_tax", "severity": "critical", "status": "pass",
+      "detail": "sell output shortfall versus pre-trade router quote: 0.00%" },
+    { "module": "hidden_mint", "severity": "high", "status": "warn",
+      "detail": "impersonated owner mint(address,uint256) executed; the owner is a contract, so issuance follows its code, which was not audited" }
+  ],
+  "report_url": "https://chaink9.com/token/bsc/0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82"
+}
+```
+
+## How often it is right
+
+ChainK9 scans new launches in the background. For each one it writes down its own verdict and, at
+the same moment, the verdicts of honeypot.is and GoPlus. A day later it checks what really
+happened on the chain: whether outside wallets sold, and whether a fresh wallet could still sell.
+
+The catch rate, false alarms and precision for all three scanners are public at
+[chaink9.com/accuracy](https://chaink9.com/accuracy), updated every hour. Weekly reports go out on
+X at [@ChainK9x](https://x.com/ChainK9x), such as
+[this one](https://x.com/ChainK9x/status/2121548151895330961).
+
+## Install
 
 Claude Code:
 
@@ -72,18 +117,74 @@ Cursor, Claude Desktop or any client with a JSON config:
 ```
 
 Claude Desktop can also install the `.mcpb` bundle from the
-[releases](https://github.com/ChainK9/chaink9-mcp/releases) with a click.
+[releases](https://github.com/ChainK9/chaink9-mcp/releases) with a click. Then ask:
 
-### Hosted server, no install
+```text
+Check 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82 on BSC with ChainK9 before I buy it.
+```
 
-`https://api.chaink9.com/mcp` serves the same tools over streamable HTTP (MCP 2025 and
-2026-07-28 clients alike), plus a free
-`verdict` tool (the stored verdict and which checks flagged it). Paid tools there take the
-payment inside the MCP call, x402-style, so they need an x402-aware client such as
-[`@x402/mcp`](https://www.npmjs.com/package/@x402/mcp)'s `createx402MCPClient`. Ordinary MCP
-clients can connect and use `verdict`; to pay from those, use the package above.
+Scans are paid per call, from $0.002 to $0.05, out of a wallet you set up for this. See
+[Paying for scans](#paying-for-scans). The stored verdict for a token is free, with nothing to
+install:
 
-## Limits
+```bash
+curl "https://api.chaink9.com/verdict?token=0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82&chain=bsc"
+```
+
+## Tools
+
+The tool list is read live from [api.chaink9.com](https://api.chaink9.com/openapi.json), so new
+tools appear without updating this package. Every tool takes `chain`: `bsc` (the default), `eth`,
+`base` or `arc`.
+
+Check a token:
+
+| Tool | Price | What it does |
+|---|---|---|
+| `scan` | $0.02 | Full check: honeypot, buy and sell taxes and how they change, owner pause, blacklist, mint and confiscation powers, limits, liquidity, upgrade authority. |
+| `scan-lite` | $0.005 | Faster check for bots (2 to 5 s): one real buy and sell plus the contract reads. Skips the extra trades and the time-travel probes. |
+| `scan-ultra` | $0.05 | Everything in `scan`, plus who holds the token: the top holder's and top 10's share, and whether one wallet can pull the liquidity. |
+| `report` | $0.002 | The latest stored scan of a token, without running a new one. |
+| `risk-changes` | $0.002 | What changed between a token's last two scans. |
+| `liquidity-report` | $0.003 | The token's pool: reserves and LP tokens (V2), or liquidity and price (V3 and V4). |
+| `deployer-report` | $0.005 | A token's verified creator and their other known tokens. |
+
+Follow new launches:
+
+| Tool | Price | What it does |
+|---|---|---|
+| `feed` | $0.002 | Tokens that just got a market, with a verdict where scanned. |
+| `launch-feed` | $0.003 | New markets that are actually funded, optionally filtered by verdict. |
+
+Test a wallet's own trade:
+
+| Tool | Price | What it does |
+|---|---|---|
+| `simulate-trade` | $0.02 | A buy or sell for a given wallet on a fork, with its real balances. |
+| `exit-check` | $0.04 | Up to four sell sizes from a wallet's real balance. |
+| `transaction-preview` | $0.02 | Any transaction run on a fork, with the balance changes it causes. |
+| `portfolio-screen` | $0.005 | A wallet's balances of the tokens you name, riskiest first. |
+
+Follow the money:
+
+| Tool | Price | What it does |
+|---|---|---|
+| `trace` | $0.01 | Follows the money out of one transaction, wallet to wallet and through swaps, up to five hops, until it rests, is burned, or reaches a mixer or a busy wallet such as an exchange. |
+
+## Paying for scans
+
+There is no account and no API key. Each successful call is paid from a wallet you choose, in
+USDC on Base or USDT on BNB Smart Chain, using the [x402](https://x402.org) payment protocol. A
+call that fails costs nothing: bad input, an address that is not a token, a token with no
+liquidity, a busy engine.
+
+1. Make a new wallet for this and put a few dollars of USDC on Base in it. It needs no ETH,
+   because the payments are signatures and the payment service pays the gas.
+2. Give the server that wallet's private key as `CHAINK9_PRIVATE_KEY`.
+
+To pay on BNB Smart Chain instead, fund the wallet with USDT on BSC plus about $0.01 of BNB and
+set `CHAINK9_PAY_NETWORK=bsc`. BSC's USDT is paid through Permit2. The first payment also signs a
+one-time approval, which is the only thing that uses the BNB.
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -92,12 +193,39 @@ clients can connect and use `verdict`; to pay from those, use the package above.
 | `CHAINK9_MAX_USD_PER_CALL` | `0.05` | Any single payment above this is refused. |
 | `CHAINK9_MAX_USD_PER_DAY` | `1` | Stops paying once this much was spent today (UTC). |
 
-The daily total is kept in `~/.chaink9-mcp/spend.json`. The wallet only ever signs payments
-on the network you chose, and the key never leaves your machine.
+The key never leaves your machine, and the wallet only signs payments on the network you chose.
+The daily total is kept in `~/.chaink9-mcp/spend.json`.
+
+## Hosted server, no install
+
+`https://api.chaink9.com/mcp` serves the same tools over streamable HTTP, for MCP 2025 and
+2026-07-28 clients alike. It adds a free `verdict` tool: the stored verdict for a token and the
+names of the checks that flagged it.
+
+Paid tools on the hosted server take the payment inside the MCP call, so they need an x402-aware
+client such as [`@x402/mcp`](https://www.npmjs.com/package/@x402/mcp)'s `createx402MCPClient`.
+Ordinary MCP clients can connect and use `verdict`. To pay from those, use the package above.
+
+## What is open and what is not
+
+The scan engine is closed source. This repository is open so you can read what runs on your
+machine and signs with your wallet: [`index.js`](index.js), about 140 lines.
+
+Two more ChainK9 tools are open source:
+
+- [bsc-honeypot-benchmark](https://github.com/ChainK9/bsc-honeypot-benchmark): 47 test tokens for
+  BNB Smart Chain, 37 of them with a hidden trick, for testing any token scanner. They are the
+  set ChainK9's own checks are tested against.
+- [bsc-block-time](https://github.com/ChainK9/bsc-block-time): turns BNB Smart Chain block numbers
+  into dates across every block-speed change, and finds contracts that still count time in blocks.
+
+Danger catches are posted to the Telegram channel [t.me/chaink9](https://t.me/chaink9). For
+questions and bug reports, [open an issue](https://github.com/ChainK9/chaink9-mcp/issues) or write
+to hello@chaink9.com.
 
 ## Disclaimer
 
 ChainK9 reports what happened when it traded the token on a private copy of its blockchain at
 the block shown. That is evidence, not a guarantee: a token's owner can change its rules after
-the scan, and traps no check tests can be missed. Nothing here is financial advice; you trade
-at your own risk.
+the scan, and a trap that no check tests can be missed. Nothing here is financial advice. You
+trade at your own risk.

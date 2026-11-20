@@ -4,3 +4,4 @@ server.json
 .gitignore
 .mcpbignore
 test/
+assets/
