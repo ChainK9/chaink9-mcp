@@ -206,6 +206,68 @@ Paid tools on the hosted server take the payment inside the MCP call, so they ne
 client such as [`@x402/mcp`](https://www.npmjs.com/package/@x402/mcp)'s `createx402MCPClient`.
 Ordinary MCP clients can connect and use `verdict`. To pay from those, use the package above.
 
+## Use with Cloudflare Code Mode
+
+[Code Mode](https://developers.cloudflare.com/agents/tools/codemode/) gives a model one tool that
+runs code, with your MCP servers available inside a sandbox as a typed API. Add the hosted server
+and ChainK9's tools become functions such as `verdict`, `scan_lite` and `scan`:
+
+```ts
+// In an Agents SDK agent (Code Mode needs a Worker Loader binding named LOADER)
+import { DynamicWorkerExecutor } from "@cloudflare/codemode";
+import { createCodeTool } from "@cloudflare/codemode/ai";
+
+await this.addMcpServer("chaink9", "https://api.chaink9.com/mcp");
+const codemode = createCodeTool({
+  tools: this.mcp.getAITools(),
+  executor: new DynamicWorkerExecutor({ loader: this.env.LOADER }),
+});
+```
+
+The model can then check a batch of tokens in one run instead of one tool call each:
+
+```js
+async () => {
+  const tokens = ["0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82" /* , ... */];
+  const verdicts = await Promise.all(tokens.map((token) => codemode.verdict({ token, chain: "bsc" })));
+  return verdicts.filter((v) => v.verdict === "danger").map((v) => ({ token: v.token, failed: v.failed }));
+}
+```
+
+`verdict` is free and works as shown. The paid tools need the payment added outside the sandbox,
+so the code the model writes never sees a wallet. Connect with
+[`@x402/mcp`](https://www.npmjs.com/package/@x402/mcp) and give that client to a connector:
+
+```ts
+import { McpConnector } from "@cloudflare/codemode";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker-provider.js";
+import { createx402MCPClient } from "@x402/mcp";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { privateKeyToAccount } from "viem/accounts";
+
+const x402 = createx402MCPClient({
+  name: "my-agent",
+  version: "1.0.0",
+  schemes: [{ network: "eip155:8453", client: new ExactEvmScheme(privateKeyToAccount(env.PAYER_KEY)) }],
+  autoPayment: true,
+  // Workers can't compile schemas with Ajv: validate the way the Agents SDK does.
+  mcpClientOptions: { jsonSchemaValidator: new CfWorkerJsonSchemaValidator({ draft: "7" }) },
+});
+await x402.connect(new StreamableHTTPClientTransport(new URL("https://api.chaink9.com/mcp")));
+const { tools } = await x402.listTools();
+
+class ChainK9 extends McpConnector<Env> {
+  name() { return "chaink9"; }
+  protected createConnection() {
+    return { tools, client: { callTool: ({ name, arguments: args }) => x402.callTool(name, args) } };
+  }
+}
+```
+
+Use a dedicated wallet with a few dollars of USDC on Base, and set a limit in
+`onPaymentRequested` as with any x402 client.
+
 ## What is open and what is not
 
 The scan engine is closed source. This repository is open so you can read what runs on your
