@@ -171,9 +171,27 @@ Follow the money:
 |---|---|---|
 | `trace` | $0.01 | Follows the money out of one transaction, wallet to wallet and through swaps, up to five hops, until it rests, is burned, or reaches a mixer or a busy wallet such as an exchange. |
 
+## Check before you buy
+
+[`examples/check-before-buy.mjs`](examples/check-before-buy.mjs) is a small gate to put in front of a
+trading bot's buy. It reads the free stored verdict first. If that is "danger", it says don't buy
+and pays nothing. If the verdict is missing, could not decide, or is older than an hour, it pays for
+one `scan-lite` ($0.005) and decides on that. It buys only on "ok".
+
+```bash
+git clone https://github.com/ChainK9/chaink9-mcp && cd chaink9-mcp && npm install
+CHAINK9_PRIVATE_KEY=0x... node examples/check-before-buy.mjs 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82 bsc
+```
+
+It prints the decision with the checks that failed or warned and a link to the token's report, and
+exits 0 to buy, 1 not to, 2 when it could not check. Import `checkBeforeBuy` to use it from your
+own code. Instead of a wallet, `CHAINK9_API_KEY` pays from the credits of a
+[chaink9.com](https://chaink9.com/signin) account. `npm test` runs it against a fake API, with no
+network and no money.
+
 ## Paying for scans
 
-There is no account and no API key. Each successful call is paid from a wallet you choose, in
+No account is needed. Each successful call is paid from a wallet you choose, in
 USDC on Base or USDT on BNB Smart Chain, using the [x402](https://x402.org) payment protocol. A
 call that fails costs nothing: bad input, an address that is not a token, a token with no
 liquidity, a busy engine.

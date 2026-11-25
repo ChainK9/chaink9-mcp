@@ -43,6 +43,6 @@
     "url": "git+https://github.com/ChainK9/chaink9-mcp.git"
   },
   "scripts": {
-    "test": "node test/smoke.mjs"
+    "test": "node test/example.mjs && node test/smoke.mjs"
   }
 }
